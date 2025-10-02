@@ -23,6 +23,20 @@ go get github.com/bllyanos/gotemp
 
 ## Quick Start
 
+Gotemp requires a specific directory structure for your templates:
+
+```
+templates/
+├── root.html           # Base HTML structure (required)
+├── partials/           # Reusable components (optional)
+│   └── _header.html
+├── layouts/            # Page layouts (required)
+│   └── app.html
+└── pages/              # Page content (required)
+    └── home/
+        └── index.html
+```
+
 ```go
 package main
 
