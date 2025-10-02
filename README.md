@@ -66,6 +66,103 @@ func main() {
 }
 ```
 
+## LLM Quick Setup Guide
+
+<details>
+<summary>📖 Complete LLM Setup and Usage Guide</summary>
+
+For a comprehensive guide on installing, setting up, and using this package with detailed examples and best practices, see [llm.txt](./llm.txt).
+
+### Quick Start for LLM Users
+
+1. **Install the package:**
+   ```bash
+   go get github.com/bllyanos/gotemp
+   ```
+
+2. **Create required template structure:**
+   ```bash
+   mkdir -p templates/{partials,layouts,pages/home}
+   ```
+
+3. **Create basic templates:**
+   ```bash
+   # root.html (required)
+   cat > templates/root.html << 'EOF'
+   {{ define "__start" }}
+   <!DOCTYPE html>
+   <html lang="en">
+     <head>
+       <meta charset="UTF-8">
+       <title>{{ .Title }}</title>
+     </head>
+     <body>
+   {{ end }}
+   {{ define "__end" }}
+     </body>
+   </html>
+   {{ end }}
+   EOF
+
+   # layouts/app.html (required)
+   cat > templates/layouts/app.html << 'EOF'
+   {{ define "app_layout" }}
+   {{ template "__start" . }}
+   <div class="container">
+     {{ block "content" . }}{{ end }}
+   </div>
+   {{ template "__end" . }}
+   {{ end }}
+   EOF
+
+   # pages/home/index.html (required)
+   cat > templates/pages/home/index.html << 'EOF'
+   {{ define "content" }}
+   <h1>Welcome!</h1>
+   <p>{{ .Message }}</p>
+   {{ end }}
+   EOF
+   ```
+
+4. **Basic usage:**
+   ```go
+   package main
+
+   import (
+       "os"
+       "github.com/bllyanos/gotemp"
+   )
+
+   func main() {
+       g, err := gotemp.New("templates")
+       if err != nil {
+           panic(err)
+       }
+
+       data := map[string]string{
+           "Title":   "My Site",
+           "Message": "Hello from Gotemp!",
+       }
+
+       err = g.RenderPage(os.Stdout, "app_layout", "home/index.html", data)
+       if err != nil {
+           panic(err)
+       }
+   }
+   ```
+
+### Advanced Features
+
+- **Multiple layouts**: Create different layouts for auth, admin, etc.
+- **Partials**: Reusable components like headers, footers
+- **Complex data**: Use Go structs for type-safe data injection
+- **Error handling**: Comprehensive error management
+- **Web server integration**: HTTP server examples
+
+For detailed explanations, troubleshooting, and advanced patterns, see the complete [llm.txt guide](./llm.txt).
+
+</details>
+
 ## API Documentation
 
 ### `New(basePath string) (*Gotemp, error)`
@@ -263,103 +360,6 @@ The test suite covers:
 ## License
 
 This project is open source. See the LICENSE file for details.
-
-## LLM Quick Setup Guide
-
-<details>
-<summary>📖 Complete LLM Setup and Usage Guide</summary>
-
-For a comprehensive guide on installing, setting up, and using this package with detailed examples and best practices, see [llm.txt](./llm.txt).
-
-### Quick Start for LLM Users
-
-1. **Install the package:**
-   ```bash
-   go get github.com/bllyanos/gotemp
-   ```
-
-2. **Create required template structure:**
-   ```bash
-   mkdir -p templates/{partials,layouts,pages/home}
-   ```
-
-3. **Create basic templates:**
-   ```bash
-   # root.html (required)
-   cat > templates/root.html << 'EOF'
-   {{ define "__start" }}
-   <!DOCTYPE html>
-   <html lang="en">
-     <head>
-       <meta charset="UTF-8">
-       <title>{{ .Title }}</title>
-     </head>
-     <body>
-   {{ end }}
-   {{ define "__end" }}
-     </body>
-   </html>
-   {{ end }}
-   EOF
-
-   # layouts/app.html (required)
-   cat > templates/layouts/app.html << 'EOF'
-   {{ define "app_layout" }}
-   {{ template "__start" . }}
-   <div class="container">
-     {{ block "content" . }}{{ end }}
-   </div>
-   {{ template "__end" . }}
-   {{ end }}
-   EOF
-
-   # pages/home/index.html (required)
-   cat > templates/pages/home/index.html << 'EOF'
-   {{ define "content" }}
-   <h1>Welcome!</h1>
-   <p>{{ .Message }}</p>
-   {{ end }}
-   EOF
-   ```
-
-4. **Basic usage:**
-   ```go
-   package main
-
-   import (
-       "os"
-       "github.com/bllyanos/gotemp"
-   )
-
-   func main() {
-       g, err := gotemp.New("templates")
-       if err != nil {
-           panic(err)
-       }
-
-       data := map[string]string{
-           "Title":   "My Site",
-           "Message": "Hello from Gotemp!",
-       }
-
-       err = g.RenderPage(os.Stdout, "app_layout", "home/index.html", data)
-       if err != nil {
-           panic(err)
-       }
-   }
-   ```
-
-### Advanced Features
-
-- **Multiple layouts**: Create different layouts for auth, admin, etc.
-- **Partials**: Reusable components like headers, footers
-- **Complex data**: Use Go structs for type-safe data injection
-- **Error handling**: Comprehensive error management
-- **Web server integration**: HTTP server examples
-
-For detailed explanations, troubleshooting, and advanced patterns, see the complete [llm.txt guide](./llm.txt).
-
-</details>
 
 ## Contributing
 
