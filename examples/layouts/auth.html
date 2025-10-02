@@ -1,0 +1,11 @@
+{{ define "auth_layout" }}
+{{ template "__start" . }}
+
+<div class="container mx-auto">
+  disini auth
+  {{ block "content" . }}
+  {{ end }}
+</div>
+
+{{ template "__end" . }}
+{{ end }}
