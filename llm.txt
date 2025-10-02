@@ -1,0 +1,583 @@
+# Gotemp: Comprehensive Installation and Usage Guide
+
+## Overview
+
+Gotemp is an opinionated Go template loading and rendering library that provides a clean, structured way to organize and render HTML templates. This guide covers everything from installation to advanced usage patterns.
+
+## Installation
+
+### Prerequisites
+- Go 1.25.1 or later
+- Basic understanding of Go project structure
+
+### Installing the Package
+```bash
+go get github.com/bllyanos/gotemp
+```
+
+### Importing in Your Code
+```go
+import "github.com/bllyanos/gotemp"
+```
+
+## Quick Setup
+
+### 1. Create Your Template Directory Structure
+Gotemp enforces a specific directory structure. Create a `templates` directory in your project:
+
+```
+your-project/
+├── main.go
+└── templates/
+    ├── root.html
+    ├── partials/
+    ├── layouts/
+    └── pages/
+```
+
+### 2. Create Required Templates
+
+#### Root Template (`templates/root.html`)
+```html
+{{ define "__start" }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ .Title }}</title>
+  </head>
+  <body>
+{{ end }}
+
+{{ define "__end" }}
+  </body>
+</html>
+{{ end }}
+```
+
+#### Layout Template (`templates/layouts/main.html`)
+```html
+{{ define "main_layout" }}
+{{ template "__start" . }}
+
+<div class="container">
+  {{ block "content" . }}
+  {{ end }}
+</div>
+
+{{ template "__end" . }}
+{{ end }}
+```
+
+#### Page Template (`templates/pages/home/index.html`)
+```html
+{{ define "content" }}
+<h1>Welcome to My Site</h1>
+<p>{{ .Message }}</p>
+{{ end }}
+```
+
+### 3. Basic Usage Example
+```go
+package main
+
+import (
+    "os"
+    "github.com/bllyanos/gotemp"
+)
+
+func main() {
+    // Initialize the template engine
+    g, err := gotemp.New("templates")
+    if err != nil {
+        panic(err)
+    }
+
+    // Prepare data
+    data := map[string]string{
+        "Title":   "My Website",
+        "Message": "Welcome to my awesome website!",
+    }
+
+    // Render the page
+    err = g.RenderPage(os.Stdout, "main_layout", "home/index.html", data)
+    if err != nil {
+        panic(err)
+    }
+}
+```
+
+## Complete Setup Guide
+
+### Step 1: Project Initialization
+```bash
+mkdir my-web-app
+cd my-web-app
+go mod init my-web-app
+go get github.com/bllyanos/gotemp
+```
+
+### Step 2: Create Template Structure
+```bash
+mkdir -p templates/{partials,layouts,pages/home}
+```
+
+### Step 3: Set Up Templates
+
+#### Create Root Template
+```bash
+cat > templates/root.html << 'EOF'
+{{ define "__start" }}
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>{{ .Title }}</title>
+    <style>
+      body { font-family: Arial, sans-serif; margin: 0; padding: 20px; }
+      .container { max-width: 800px; margin: 0 auto; }
+      .header { background: #f4f4f4; padding: 20px; margin-bottom: 20px; }
+    </style>
+  </head>
+  <body>
+{{ end }}
+
+{{ define "__end" }}
+  </body>
+</html>
+{{ end }}
+EOF
+```
+
+#### Create Header Partial
+```bash
+mkdir -p templates/partials
+cat > templates/partials/_header.html << 'EOF'
+{{ define "_header" }}
+<div class="header">
+  <h1>{{ .SiteName }}</h1>
+  <nav>
+    <a href="/">Home</a> |
+    <a href="/about">About</a> |
+    <a href="/contact">Contact</a>
+  </nav>
+</div>
+{{ end }}
+EOF
+```
+
+#### Create Main Layout
+```bash
+cat > templates/layouts/app.html << 'EOF'
+{{ define "app_layout" }}
+{{ template "__start" . }}
+
+{{ template "_header" . }}
+
+<div class="container">
+  {{ block "content" . }}
+  {{ end }}
+</div>
+
+{{ template "__end" . }}
+{{ end }}
+EOF
+```
+
+#### Create Home Page
+```bash
+cat > templates/pages/home/index.html << 'EOF'
+{{ define "content" }}
+<h2>Welcome Home!</h2>
+<p>{{ .WelcomeMessage }}</p>
+<ul>
+  {{ range .Features }}
+  <li>{{ . }}</li>
+  {{ end }}
+</ul>
+{{ end }}
+EOF
+```
+
+### Step 4: Create Main Application
+```go
+package main
+
+import (
+    "fmt"
+    "log"
+    "os"
+    "github.com/bllyanos/gotemp"
+)
+
+func main() {
+    // Initialize template engine
+    g, err := gotemp.New("templates")
+    if err != nil {
+        log.Fatalf("Failed to initialize templates: %v", err)
+    }
+
+    // Prepare comprehensive data
+    data := map[string]interface{}{
+        "Title":          "My Awesome Website",
+        "SiteName":       "MyWebApp",
+        "WelcomeMessage": "Welcome to our amazing website built with Gotemp!",
+        "Features": []string{
+            "Fast rendering",
+            "Clean template structure",
+            "Type-safe data injection",
+            "Component-based design",
+        },
+    }
+
+    // Render to standard output
+    fmt.Println("Rendering home page...")
+    err = g.RenderPage(os.Stdout, "app_layout", "home/index.html", data)
+    if err != nil {
+        log.Fatalf("Failed to render page: %v", err)
+    }
+}
+```
+
+### Step 5: Run Your Application
+```bash
+go run main.go
+```
+
+## Advanced Usage Patterns
+
+### Multiple Layouts
+
+Create different layouts for different page types:
+
+#### Auth Layout (`templates/layouts/auth.html`)
+```html
+{{ define "auth_layout" }}
+{{ template "__start" . }}
+
+<div class="auth-container">
+  <div class="auth-card">
+    {{ block "content" . }}
+    {{ end }}
+  </div>
+</div>
+
+{{ template "__end" . }}
+{{ end }}
+```
+
+#### Login Page (`templates/pages/auth/login.html`)
+```html
+{{ define "content" }}
+<h2>Login</h2>
+<form>
+  <input type="email" placeholder="Email" required>
+  <input type="password" placeholder="Password" required>
+  <button type="submit">Login</button>
+</form>
+{{ end }}
+```
+
+### Using Multiple Layouts
+```go
+// Render home page with app layout
+err = g.RenderPage(os.Stdout, "app_layout", "home/index.html", homeData)
+
+// Render login page with auth layout
+err = g.RenderPage(os.Stdout, "auth_layout", "auth/login.html", loginData)
+```
+
+### Complex Data Structures
+
+#### Nested Data Example
+```go
+type User struct {
+    Name    string
+    Email   string
+    Bio     string
+    Joined  string
+}
+
+type PageData struct {
+    Title       string
+    User        User
+    Posts       []Post
+    IsLoggedIn  bool
+    CurrentTime string
+}
+
+type Post struct {
+    Title   string
+    Content string
+    Date    string
+}
+
+// Usage
+data := PageData{
+    Title: "User Profile",
+    User: User{
+        Name:   "John Doe",
+        Email:  "john@example.com",
+        Bio:    "Go developer and template enthusiast",
+        Joined: "January 2024",
+    },
+    Posts: []Post{
+        {Title: "Hello World", Content: "My first post", Date: "2024-01-15"},
+        {Title: "Templates are Cool", Content: "Using Gotemp!", Date: "2024-01-20"},
+    },
+    IsLoggedIn:  true,
+    CurrentTime: "2024-01-25 14:30:00",
+}
+
+err = g.RenderPage(os.Stdout, "app_layout", "user/profile.html", data)
+```
+
+#### Template for Complex Data (`templates/pages/user/profile.html`)
+```html
+{{ define "content" }}
+<h1>{{ .User.Name }}'s Profile</h1>
+
+<div class="user-info">
+  <p><strong>Email:</strong> {{ .User.Email }}</p>
+  <p><strong>Member since:</strong> {{ .User.Joined }}</p>
+  <p><strong>Bio:</strong> {{ .User.Bio }}</p>
+</div>
+
+<h2>Recent Posts</h2>
+{{ range .Posts }}
+  <div class="post">
+    <h3>{{ .Title }}</h3>
+    <p>{{ .Content }}</p>
+    <small>Posted: {{ .Date }}</small>
+  </div>
+{{ end }}
+
+{{ if .IsLoggedIn }}
+  <button>Edit Profile</button>
+{{ end }}
+{{ end }}
+```
+
+### Error Handling Best Practices
+
+```go
+package main
+
+import (
+    "bytes"
+    "fmt"
+    "log"
+    "strings"
+    "github.com/bllyanos/gotemp"
+)
+
+func renderPageWithErrorHandling(g *gotemp.Gotemp, layout, page string, data interface{}) (string, error) {
+    var buf bytes.Buffer
+
+    err := g.RenderPage(&buf, layout, page, data)
+    if err != nil {
+        // Handle specific error types
+        if strings.Contains(err.Error(), "page template not found") {
+            return "", fmt.Errorf("template page '%s' does not exist. Available pages must be in pages/ subdirectories", page)
+        }
+
+        if strings.Contains(err.Error(), "could not read the pages directory") {
+            return "", fmt.Errorf("pages directory not found or inaccessible. Ensure your templates directory contains a pages/ folder")
+        }
+
+        return "", fmt.Errorf("template rendering failed: %w", err)
+    }
+
+    return buf.String(), nil
+}
+
+func main() {
+    g, err := gotemp.New("templates")
+    if err != nil {
+        log.Fatalf("Failed to initialize template engine: %v", err)
+    }
+
+    // Example with error handling
+    result, err := renderPageWithErrorHandling(g, "app_layout", "home/index.html", map[string]string{
+        "Title": "Test Page",
+    })
+
+    if err != nil {
+        log.Printf("Error rendering page: %v", err)
+        // Fallback to simple error page
+        result = "<h1>Service Unavailable</h1><p>Please try again later.</p>"
+    }
+
+    fmt.Println(result)
+}
+```
+
+### Web Server Integration
+
+#### HTTP Server Example
+```go
+package main
+
+import (
+    "log"
+    "net/http"
+    "github.com/bllyanos/gotemp"
+)
+
+type Server struct {
+    templates *gotemp.Gotemp
+}
+
+func NewServer(templatesDir string) (*Server, error) {
+    g, err := gotemp.New(templatesDir)
+    if err != nil {
+        return nil, err
+    }
+
+    return &Server{templates: g}, nil
+}
+
+func (s *Server) homeHandler(w http.ResponseWriter, r *http.Request) {
+    data := map[string]interface{}{
+        "Title": "Welcome",
+        "Message": "Hello from the web server!",
+    }
+
+    err := s.templates.RenderPage(w, "app_layout", "home/index.html", data)
+    if err != nil {
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        log.Printf("Error rendering home page: %v", err)
+    }
+}
+
+func (s *Server) aboutHandler(w http.ResponseWriter, r *http.Request) {
+    data := map[string]interface{}{
+        "Title": "About Us",
+        "Company": "My Awesome Company",
+        "Description": "We build amazing web applications with Go!",
+    }
+
+    err := s.templates.RenderPage(w, "app_layout", "about/index.html", data)
+    if err != nil {
+        http.Error(w, "Internal Server Error", http.StatusInternalServerError)
+        log.Printf("Error rendering about page: %v", err)
+    }
+}
+
+func main() {
+    server, err := NewServer("templates")
+    if err != nil {
+        log.Fatalf("Failed to create server: %v", err)
+    }
+
+    http.HandleFunc("/", server.homeHandler)
+    http.HandleFunc("/about", server.aboutHandler)
+
+    log.Println("Server starting on :8080")
+    log.Fatal(http.ListenAndServe(":8080", nil))
+}
+```
+
+## Testing Your Templates
+
+### Unit Test Example
+```go
+package main
+
+import (
+    "bytes"
+    "strings"
+    "testing"
+    "github.com/bllyanos/gotemp"
+)
+
+func TestTemplateRendering(t *testing.T) {
+    // Initialize with test templates
+    g, err := gotemp.New("test-templates")
+    if err != nil {
+        t.Fatalf("Failed to initialize templates: %v", err)
+    }
+
+    // Test data
+    data := map[string]string{
+        "Title":   "Test Page",
+        "Message": "Hello, Test!",
+    }
+
+    // Render template
+    var buf bytes.Buffer
+    err = g.RenderPage(&buf, "app_layout", "home/index.html", data)
+    if err != nil {
+        t.Fatalf("Failed to render template: %v", err)
+    }
+
+    result := buf.String()
+
+    // Verify content
+    if !strings.Contains(result, "Test Page") {
+        t.Error("Expected title not found in output")
+    }
+
+    if !strings.Contains(result, "Hello, Test!") {
+        t.Error("Expected message not found in output")
+    }
+
+    if !strings.Contains(result, "<!DOCTYPE html>") {
+        t.Error("Expected HTML doctype not found in output")
+    }
+}
+```
+
+## Common Issues and Solutions
+
+### Issue: Template not found
+**Error:** `page template not found: home/index.html`
+
+**Solution:** Ensure your directory structure matches the expected pattern:
+```
+templates/
+├── pages/
+│   └── home/
+│       └── index.html  # This file must exist
+```
+
+### Issue: Layout not found
+**Error:** Template execution error
+
+**Solution:** Ensure your layout template defines the correct template name:
+```html
+{{ define "app_layout" }}  <!-- Must match the layout name in RenderPage() -->
+```
+
+### Issue: Partials not working
+**Solution:** Ensure partials are in the `partials/` directory and use proper naming:
+```
+templates/
+├── partials/
+│   ├── _header.html  # Use underscore prefix for convention
+│   └── _footer.html
+```
+
+## Best Practices
+
+1. **Organize pages by functionality**: Use meaningful subdirectories like `user/`, `admin/`, `blog/`
+2. **Use consistent naming**: Prefix partials with underscore (`_header.html`, `_footer.html`)
+3. **Validate template structure**: Create tests to ensure all required templates exist
+4. **Handle errors gracefully**: Always check for template loading and rendering errors
+5. **Use type-safe data**: Define structs for complex data structures
+6. **Keep templates simple**: Don't put too much logic in templates
+
+## Summary
+
+Gotemp provides a clean, opinionated approach to Go template management. By following the predefined structure and using the patterns outlined in this guide, you can quickly set up a robust template system for your web applications.
+
+Key takeaways:
+- Follow the strict directory structure
+- Use proper error handling
+- Leverage the type safety of Go for data structures
+- Test your templates thoroughly
+- Keep templates organized and maintainable
+
+Happy templating!
